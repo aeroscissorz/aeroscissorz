@@ -23,8 +23,8 @@ def read_post(path):
     return meta, body.strip()
 
 def document(content, title, post=False):
-    prefix = "../" if post else ""
-    nav = '<a class="back" href="../index.html">← home</a>' if post else '<nav class="nav"><a href="#writing">writing</a><a href="#about">about</a></nav>'
+    prefix = "../../" if post else ""
+    nav = '<a class="back" href="../../index.html">← home</a>' if post else '<nav class="nav"><a href="#writing">writing</a><a href="#about">about</a></nav>'
     main_class = 'section post-section' if post else ''
     return f'''<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="description" content="{escape(title)}"><title>{escape(title)} — Shubham Sharma</title><link rel="stylesheet" href="{prefix}site.css"></head><body><div class="site-shell"><header><a class="wordmark" href="{prefix}index.html">shubham sharma</a>{nav}</header><main class="{main_class}">{content}</main><footer><span>© <span data-year></span> shubham sharma</span><span class="status">available for good work</span></footer></div><script src="{prefix}site.js"></script></body></html>'''
 
