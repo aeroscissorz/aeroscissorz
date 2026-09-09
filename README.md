@@ -1,53 +1,40 @@
-<div align="center">
+````md
+# Shubham Sharma
 
-# Hi, I'm Shubham 👋
+```text
+SHUBHAMSHARMA(1)              Engineer Manual              SHUBHAMSHARMA(1)
 
-### Builder · Frontend developer · Curious about how things work
+NAME
+       shubhamsharma - builds things with AI until they work
 
-I like turning ideas into simple, useful, and thoughtful digital experiences.
+SYNOPSIS
+       shubhamsharma [--python | --ai | --agents | --rag] <idea-at-3am>
 
-[Portfolio](https://nishantjosh.dev/) · [GitHub](https://github.com/aeroscissorz)
+DESCRIPTION
+       GenAI engineer. Builds LLM applications, RAG pipelines,
+       multi-agent systems, and developer tools.
 
-</div>
+       Currently breaking things at Cognizant. Previously broke
+       computer vision and FPGA systems.
 
----
+       Built LearnLance — turns AI coding sessions into a
+       personal knowledge graph.
 
-## About me
+       Primary language: Python.
+       Secondary language: whatever the problem requires.
 
-- 🔨 Building small products and polished web experiences
-- 🌱 Learning in public and getting better at the fundamentals
-- ✍️ Interested in design, developer tools, and the web
-- 💬 Always happy to talk about ideas, code, and side projects
+BUGS
+       Plenty.
 
-## Tech I work with
+SEE ALSO
+       sleep(1) — not installed
 
-`HTML` · `CSS` · `JavaScript` · `React` · `Node.js` · `Git`
+ShubhamSharma                   2026-09                   SHUBHAMSHARMA(1)
+````
 
-## Featured projects
+[GitHub](https://github.com/aeroscissorz) · [LinkedIn](https://www.linkedin.com/in/shubham-sharma-89bb56211/) · [Hacker News](https://news.ycombinator.com/user?id=aeroscissorz1)
 
-| Project | What it is |
-| --- | --- |
-| [Personal site](https://github.com/aeroscissorz) | A quiet home on the internet for my work and writing |
-| More soon | Currently building and learning |
+<sub>works on my machine</sub>
 
-## GitHub activity
-
-<div align="center">
-
-![GitHub stats](https://github-readme-stats.vercel.app/api?username=aeroscissorz&show_icons=true&hide_border=true&theme=transparent&rank_icon=github)
-
-![Top languages](https://github-readme-stats.vercel.app/api/top-langs/?username=aeroscissorz&layout=compact&hide_border=true&theme=transparent)
-
-</div>
-
-## A note
-
-> Make something clear enough that it feels inevitable.
-
----
-
-<div align="center">
-
-Thanks for stopping by — have a good one ✨
-
-</div>
+```
+```
