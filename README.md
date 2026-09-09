@@ -1,4 +1,4 @@
-````md
+````markdown
 # Shubham Sharma
 
 ```text
@@ -30,11 +30,9 @@ SEE ALSO
        sleep(1) — not installed
 
 ShubhamSharma                   2026-09                   SHUBHAMSHARMA(1)
-````
+```
 
 [GitHub](https://github.com/aeroscissorz) · [LinkedIn](https://www.linkedin.com/in/shubham-sharma-89bb56211/) · [Hacker News](https://news.ycombinator.com/user?id=aeroscissorz1)
 
-<sub>works on my machine</sub>
-
-```
-```
+> works on my machine
+````
