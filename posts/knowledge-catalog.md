@@ -1,72 +1,383 @@
 ---
-title: How to make an AI agent understand your data
+title: Your AI Agent Doesn't Need a Bigger Prompt. It Needs a Data Catalog.
 date: sep 9, 2026
-words: 800
+words: 1100
 status: public
 ---
 
 I was building an AI agent that could answer questions about company data.
 
-The demo worked.
+It looked impressive.
 
-It could call tools, generate SQL, summarize results, and sound convincing.
+It could call tools, generate SQL, execute queries, summarize results, and explain its reasoning.
 
-That was the problem.
+Then I asked it a simple question:
 
-A convincing answer is not necessarily a correct answer.
+> What was our monthly recurring revenue from new customers last quarter?
 
-The agent knew how to query a database. It did not know what the tables meant.
+The SQL was valid.
 
-## A catalog is not just a list of tables
+The query ran successfully.
 
-I started with Dataplex Universal Catalog. By the time I was working with it, Google had renamed it Knowledge Catalog. The name changed, but the existing Dataplex APIs, `gcloud dataplex` commands, and client libraries continued to work.
+The answer was wrong.
 
-The new name made more sense. A catalog used to mean a searchable inventory of data assets. Knowledge Catalog was trying to become something more useful: a continuously updated context layer for both humans and AI agents.
+That was the real problem.
 
-## Starting with discovery
+**An AI agent can know how to query a database without understanding what the data means.**
 
-The first thing I wanted was a reliable inventory. Knowledge Catalog could harvest metadata from sources such as BigQuery, Cloud Storage, AlloyDB, Spanner, and Cloud SQL.
+## A database schema isn't enough
 
-That gave me the technical layer: schemas, locations, ownership, update information, and relationships between assets.
+A database can tell an agent that a table contains:
 
-But raw metadata is still raw metadata. A column named `rev` does not tell an agent whether it means revenue, revision, or reverse.
+```text
+customers
+orders
+subscriptions
+revenue
+refunds
+```
 
-## Adding meaning to the metadata
+It can tell the model that `revenue` is a numeric column.
 
-I began writing descriptions for the assets that mattered most. What does this dataset represent? Which team owns it? What is the expected freshness? Which filters are always required?
+It cannot reliably tell the model what the company means by "revenue."
 
-The answers became part of the catalog instead of living in a document nobody opened.
+Does it include refunds?
 
-Revenue, orders, customers, refunds, and subscriptions were no longer isolated words. They formed a shared vocabulary the agent could use when searching for relevant data.
+Does it include test accounts?
+
+Is recurring revenue calculated from invoices, subscriptions, or successful payments?
+
+Does "new customer" mean the first purchase, first subscription, or first day the account was created?
+
+These aren't SQL problems.
+
+They're **context problems**.
+
+And stuffing more instructions into the system prompt isn't a good solution.
+
+## The catalog needs to become a context layer
+
+I started with Dataplex Universal Catalog. By the time I was working with it, Google had renamed it **Knowledge Catalog**.
+
+The name change actually captured what I needed.
+
+I didn't just want an inventory of tables.
+
+I wanted a place where the agent could discover:
+
+- what data exists
+- what it means
+- who owns it
+- how fresh it is
+- how it should be queried
+- which definitions are trusted
+- who is allowed to access it
+
+That turns the catalog from a directory into a **context layer**.
+
+## Start with discovery
+
+The first step was building a reliable inventory.
+
+Knowledge Catalog can harvest metadata from sources such as BigQuery, Cloud Storage, AlloyDB, Spanner, and Cloud SQL.
+
+That gives the agent useful technical information:
+
+```text
+Dataset
+ ├── tables
+ ├── columns
+ ├── types
+ ├── locations
+ ├── ownership
+ ├── relationships
+ └── update information
+```
+
+This solves the discovery problem.
+
+But it doesn't solve the meaning problem.
+
+A column called:
+
+```text
+rev
+```
+
+could mean:
+
+```text
+revenue
+revision
+reverse
+```
+
+The schema alone doesn't know.
+
+## Add meaning where the data lives
+
+I started adding descriptions to the assets that mattered most.
+
+Not generic descriptions.
+
+Business meaning.
+
+For example:
+
+```yaml
+dataset: customer_revenue
+
+description: >
+  Revenue generated from paying customers.
+  Excludes refunds and internal test accounts.
+
+owner: finance
+
+freshness: daily
+
+business_terms:
+  recurring_revenue: >
+    Subscription revenue expected to repeat
+    on an ongoing basis.
+
+  new_customer: >
+    Customer whose first successful payment
+    occurred during the measurement period.
+```
+
+Now the meaning isn't trapped inside someone's head, a Slack message, or a document nobody opens.
+
+It becomes part of the data context the agent can retrieve.
+
+That distinction matters.
+
+**Metadata tells the agent what something is.  
+Business context tells it what something means.**
 
 ## The query problem
 
-Finding the right table was only half the job. The agent still had to write the right query.
+Finding the right table was only half the problem.
 
-This is where verified queries helped. A verified query is a known-good example of how a business question should be answered. It captures more than syntax. It captures intent.
+The agent still had to write the right query.
 
-> What was monthly recurring revenue for new customers in the previous quarter?
+This is where **verified queries** became useful.
 
-There may be several technically valid ways to write that query. Only one may match the company’s definition of recurring revenue.
+A verified query is a known-good example of how a business question should be answered.
 
-I collected these examples and attached them to the relevant data context. Now the agent had more than a schema. It had patterns.
+For example:
 
-## Keeping governance in the path
+> What was monthly recurring revenue from new customers last quarter?
 
-The easiest way to make an agent useful is to give it access to everything. The easiest way to make that agent dangerous is also to give it access to everything.
+There can be several SQL queries that:
 
-Knowledge Catalog respects the permissions attached to the underlying assets. Search results and retrieved context are filtered by the caller’s access.
+- compile
+- execute
+- return numbers
+- look completely reasonable
 
-Permissions are stronger than reminders.
+Only one may match the company's definition of recurring revenue.
 
-## The agent finally had a map
+So instead of asking the model to invent the logic every time, I gave it examples.
 
-Once the catalog contained technical metadata, business descriptions, ownership, verified queries, and access controls, I connected it to the agent.
+Conceptually:
 
-The biggest improvement was not that the model became smarter. The improvement was that it had somewhere reliable to look.
+```yaml
+question: >
+  What was monthly recurring revenue
+  from new customers last quarter?
 
-Knowledge Catalog is now the name Google uses for what used to be Dataplex Universal Catalog. For me, the rename described the real shift: from cataloging data to making data understandable to machines.
+dataset: customer_revenue
 
-My agent did not need another giant system prompt.
+verified_query: |
+  SELECT
+    DATE_TRUNC(month, month) AS month,
+    SUM(recurring_revenue) AS mrr
+  FROM customer_revenue
+  WHERE customer_type = 'new'
+  GROUP BY month
+  ORDER BY month;
+```
+
+The important part isn't the SQL itself.
+
+The query captures **intent**.
+
+It shows the agent how this organization answers this particular class of question.
+
+The catalog now contains both:
+
+```text
+"What data exists?"
+```
+
+and:
+
+```text
+"How do we normally use this data?"
+```
+
+That is a much stronger form of context.
+
+## Permissions are part of the context
+
+There is another problem with giving an AI agent access to company data.
+
+The easiest way to make an agent useful is to give it access to everything.
+
+The easiest way to make that agent dangerous is also to give it access to everything.
+
+Permissions therefore can't be an afterthought.
+
+The catalog needs to respect the access controls of the underlying data.
+
+A user shouldn't receive metadata or query context for data they aren't authorized to access simply because an LLM knows how to ask for it.
+
+This leads to a principle I found more useful than adding another instruction to the prompt:
+
+> **Permissions are stronger than reminders.**
+
+Don't tell the model:
+
+```text
+Don't access sensitive data.
+```
+
+Enforce what it can actually discover and retrieve.
+
+## The architecture
+
+The resulting architecture became much simpler to reason about:
+
+```text
+                    USER
+                      |
+                      v
+                  AI AGENT
+                      |
+                      v
+              KNOWLEDGE CATALOG
+                      |
+        +-------------+-------------+
+        |             |             |
+        v             v             v
+     Metadata    Business       Verified
+                  Meaning        Queries
+        |             |             |
+        +-------------+-------------+
+                      |
+                      v
+                 Access Control
+                      |
+                      v
+                  DATA SOURCES
+```
+
+The agent still generates SQL.
+
+The difference is that it no longer has to reconstruct the organization's understanding of the data from a raw schema every time.
+
+It has a map.
+
+## The model didn't become smarter
+
+This was the most interesting part.
+
+The model didn't suddenly become better at SQL.
+
+I didn't replace it with a larger model.
+
+I didn't write an enormous system prompt containing every possible business rule.
+
+I gave it better context.
+
+Before:
+
+```text
+User
+  ↓
+LLM
+  ↓
+Database
+```
+
+After:
+
+```text
+User
+  ↓
+LLM
+  ↓
+Relevant data context
+  ↓
+Business definitions
+  ↓
+Verified examples
+  ↓
+Database
+```
+
+The second architecture gives the model something much more valuable than additional instructions:
+
+**a source of truth.**
+
+## What I would build differently from the start
+
+If I were starting the agent again, I wouldn't begin with SQL generation.
+
+I'd begin with the knowledge layer.
+
+I'd define:
+
+1. **What datasets exist?**
+2. **What does each dataset mean?**
+3. **Who owns it?**
+4. **How fresh is it?**
+5. **Which business terms map to which data?**
+6. **Which queries have already been verified?**
+7. **What can the current user access?**
+
+Only after answering those questions would I ask the agent to generate SQL.
+
+The SQL is the final step.
+
+The difficult part is making sure the agent has enough information to generate the **right** SQL.
+
+## The bigger lesson
+
+AI agents are often described as if the main challenge is intelligence.
+
+In production, the harder problem is frequently **context**.
+
+A model can be excellent at reasoning and still produce a confidently wrong answer if the information it is reasoning over is incomplete or ambiguous.
+
+That's why I think the future of AI data systems isn't just:
+
+```text
+LLM + tools
+```
+
+It's:
+
+```text
+LLM
++
+tools
++
+structured knowledge
++
+business semantics
++
+verified examples
++
+governance
+```
+
+Knowledge Catalog is now the name Google uses for what used to be Dataplex Universal Catalog.
+
+For me, the rename describes the more important shift:
+
+**from cataloging data to making data understandable to machines.**
+
+My agent didn't need another giant system prompt.
 
 It needed a shared source of truth.
